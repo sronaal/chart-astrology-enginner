@@ -8,13 +8,16 @@ version = "0.1.0"
 description = "Deterministic natal chart calculation engine"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi",
     "pysweph",
     "pydantic",
-    "pydantic-settings"
+    "pydantic-settings",
+    "uvicorn[standard]"
 ]
 
 [project.optional-dependencies]
 dev = [
+    "httpx",
     "pytest"
 ]
 
