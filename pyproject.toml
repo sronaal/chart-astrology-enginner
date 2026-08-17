@@ -12,7 +12,7 @@ dependencies = [
     "pysweph",
     "pydantic",
     "pydantic-settings",
-    "uvicorn[standard]"
+    "uvicorn"
 ]
 
 [project.optional-dependencies]
