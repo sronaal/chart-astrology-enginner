@@ -39,7 +39,7 @@ class PlanetCalculator:
 
         for name, planet_id in PLANETS.items():
 
-            result,flags, message = swe.calc_ut(
+            result, flags, message = swe.calc_ut(
                 julian_day,
                 planet_id,
             )
@@ -49,6 +49,8 @@ class PlanetCalculator:
             distance = result[2]
             speed_longitude = result[3]
 
+            retrograde = (flags & swe.FLG_RETROGRADE) != 0
+
             planets.append(
                 PlanetPosition(
                     name=name,
@@ -56,7 +58,7 @@ class PlanetCalculator:
                     latitude=latitude,
                     distance=distance,
                     speed_longitude=speed_longitude,
-                    retrograde=speed_longitude < 0,
+                    retrograde=retrograde,
                 )
             )
 

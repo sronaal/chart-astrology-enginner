@@ -1,0 +1,9 @@
+fastapi
+pysweph
+pydantic
+pydantic-settings
+uvicorn
+
+[dev]
+httpx
+pytest
