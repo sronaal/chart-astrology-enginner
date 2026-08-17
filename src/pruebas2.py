@@ -1,17 +1,29 @@
-from chart_engine.astronomy.zodiac import longitude_to_zodiac
+import swisseph as swe
+from chart_engine.astronomy.ephemeris import EphemerisEngine
+from chart_engine.domain.models import BirthData
 
 
-def test_sun_in_virgo():
+birth_data = BirthData(
+    data="2001-09-02",
+    time="11:02:00",
+    latitude=4.7110,
+    longitude=-74.0721,
+    timezone="America/Bogota",
+)
 
-    result = longitude_to_zodiac(
-        160.245597
-    )
-    print(result)
+ephemeris = EphemerisEngine()
 
-    assert result.sign == "Virgo"
-    assert result.degree == 10
-    assert result.minute == 14
-    assert round(result.second, 2) == 44.15
- 
-if __name__ == "__main__":
-    test_sun_in_virgo()
+julian_day = ephemeris.julian_day(
+    birth_data
+)
+
+print("Julian Day:", julian_day)
+
+result = swe.houses_ex(
+    julian_day,
+    birth_data.latitude,
+    birth_data.longitude,
+    b"P",
+)
+
+print(result)
