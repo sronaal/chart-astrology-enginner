@@ -1,7 +1,7 @@
 import swisseph as swe
 
 from chart_engine.astronomy.ephemeris import EphemerisEngine
-from chart_engine.domain.models import BirdData, PlanetPosition
+from chart_engine.domain.models import BirthData, PlanetPosition
 
 
 PLANETS = {
@@ -14,50 +14,50 @@ PLANETS = {
     "Saturn": swe.SATURN,
     "Uranus": swe.URANUS,
     "Neptune": swe.NEPTUNE,
-    "Pluto": swe.PLUTO
-    
+    "Pluto": swe.PLUTO,
 }
 
 
 class PlanetCalculator:
-    
-    def __init__(self, ephemeris: EphemerisEngine):
-        self.ephemeris = ephemeris
-    
-    def calculute(
+
+    def __init__(
         self,
-        birth_data: BirdData,
+        ephemeris: EphemerisEngine,
+    ):
+        self.ephemeris = ephemeris
+
+    def calculate(
+        self,
+        birth_data: BirthData,
     ) -> list[PlanetPosition]:
-        
+
         julian_day = self.ephemeris.julian_day(
-            birth_data.date.year,
-            birth_data.date.month,
-            birth_data.date.day,
-            birth_data.time.hour
-            + birth_data.time.minute / 60
-            + birth_data.time.second / 3600
+            birth_data,
         )
-        
+
         planets = []
-        
+
         for name, planet_id in PLANETS.items():
-            result, flags = swe.calc_ut(
+
+            result,flags, message = swe.calc_ut(
                 julian_day,
-                planet_id
+                planet_id,
             )
-            
-        longitude = result[0]
-        latitude = result[1]
-        distance = result[2]
-        speed_longitude = result[3]
-        
-        planets.append(
-            PlanetPosition(
-                name=name,
-                longitude=longitude,
-                latitude=latitude,
-                distance=distance,
-                speed_longitude=speed_longitude,
-                retrograde=speed_longitude < 0,
+
+            longitude = result[0]
+            latitude = result[1]
+            distance = result[2]
+            speed_longitude = result[3]
+
+            planets.append(
+                PlanetPosition(
+                    name=name,
+                    longitude=longitude,
+                    latitude=latitude,
+                    distance=distance,
+                    speed_longitude=speed_longitude,
+                    retrograde=speed_longitude < 0,
+                )
             )
-        )
+
+        return planets

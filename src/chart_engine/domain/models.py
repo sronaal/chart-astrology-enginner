@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 BirdData For Calculate Cart 
 """
 
-class BirdData(BaseModel):
+class BirthData(BaseModel):
     data: date
     time: time
     
@@ -33,7 +33,22 @@ class PlanetPosition(BaseModel):
     
 class NatalChart(BaseModel):
     
-    bird_data: BirdData
+    bird_data: BirthData
     planets: list[PlanetPosition] = Field(
         default_factory=list
+    )
+    
+class HouseCusp(BaseModel):
+    """
+    Representa la cúspide de una casa astrológica.
+    """
+
+    number: int = Field(
+        ge=1,
+        le=12
+    )
+
+    longitude: float = Field(
+        ge=0,
+        lt=360
     )

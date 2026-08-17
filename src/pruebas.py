@@ -1,16 +1,40 @@
-from datetime  import datetime
+from chart_engine.astronomy.ephemeris import EphemerisEngine
+from chart_engine.astronomy.planets import PlanetCalculator
+from chart_engine.domain.models import BirthData
 
-from chart_engine.utils.time import local_to_utc
+
+def main():
+
+    birth_data = BirthData(
+        data="2001-09-02",
+        time="11:02:00",
+        latitude=4.7110,
+        longitude=-74.0721,
+        timezone="America/Bogota",
+    )
+
+    ephemeris = EphemerisEngine()
+
+    calculator = PlanetCalculator(
+        ephemeris,
+    )
+
+    planets = calculator.calculate(
+        birth_data,
+    )
+
+    for planet in planets:
+
+        print(
+            f"{planet.name:10} "
+            f"{planet.longitude:10.6f}° "
+            f"speed={planet.speed_longitude:10.6f} "
+            f"retrograde={planet.retrograde}"
+        )
+        
+        
+    
 
 
-local = datetime(
-    2001,
-    9,
-    2,
-    11,
-    2
-)
-
-utc = local_to_utc(local, "America/Bogota")
-
-print(utc)
+if __name__ == "__main__":
+    main()
