@@ -52,3 +52,8 @@ class HouseCusp(BaseModel):
         ge=0,
         lt=360
     )
+
+class ChartAngles(BaseModel):
+    
+    ascendant: float
+    midheaven: float
