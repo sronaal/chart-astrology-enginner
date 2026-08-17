@@ -7,6 +7,23 @@ from pydantic import BaseModel
 from chart_engine.domain.models import BirthData, NatalChart
 from chart_engine.services.chart_service import ChartEngine
 
+from chart_engine.services.context_builder import (
+    build_chart_summary,
+    build_rag_search_queries,
+    build_llm_system_prompt,
+)
+
+
+
+
+
+class ChatRequest(BaseModel):
+    chart_id: UUID
+    user_query: str
+
+class ChatResponse(BaseModel):
+    prompt_generated: str
+    rag_queries_used: list[str]
 
 class ChartStore:
     """Temporary in-memory chart store, to be replaced by PostgreSQL in phase 9."""
@@ -56,8 +73,40 @@ def create_app(
         if chart is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chart not found")
         return ChartResponse(id=chart_id, chart=chart)
+    
+    
+    
+    
+    
+    @app.post("/chat", response_model=ChatResponse, tags=["chat"])
+    def prepare_chat_context(request: ChatRequest) -> ChatResponse:
+        chart = store.get(request.chart_id)
+        if chart is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chart not found")
+    
+        chart_summary = build_chart_summary(chart)
+        rag_queries = build_rag_search_queries(chart)
+    
+        rag_context_mock = "Aquí se inyectarán los fragments de texto recuperados de tu base de datos vectorial (Pinecone/pgvector) usando las 'rag_queries'."
+    
+        final_prompt = build_llm_system_prompt(
+            user_query=request.user_query,
+            chart_summary=chart_summary,
+            rag_context=rag_context_mock
+        )
+        
+        return ChatResponse(
+        prompt_generated=final_prompt,
+        rag_queries_used=rag_queries
+    )
+
 
     return app
 
 
 app = create_app()
+
+
+
+
+
