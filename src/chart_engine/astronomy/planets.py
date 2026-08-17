@@ -49,7 +49,9 @@ class PlanetCalculator:
             distance = result[2]
             speed_longitude = result[3]
 
-            retrograde = (flags & swe.FLG_RETROGRADE) != 0
+            # La retrogradación se determina por velocidad longitudinal negativa
+            # Esta es la forma estándar ya que pyswisseph no exporta FLG_RETROGRADE
+            retrograde = speed_longitude < 0
 
             planets.append(
                 PlanetPosition(

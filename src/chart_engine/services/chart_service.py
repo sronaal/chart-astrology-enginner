@@ -48,5 +48,5 @@ class ChartEngine:
                 longitude=angles.midheaven,
                 zodiac=_zodiac_position(angles.midheaven),
             ),
-            aspects=self.aspects.calculate(planets),
+            aspects=self.aspects.calculate(planets, angles.ascendant, angles.midheaven),
         )
