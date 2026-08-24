@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from chart_engine.api.app import ChartStore, create_app
@@ -40,13 +42,54 @@ def test_openapi_documents_chart_routes() -> None:
     response = client.get("/openapi.json")
 
     assert response.status_code == 200
-    assert set(response.json()["paths"]) == {"/charts", "/charts/{chart_id}"}
+    assert set(response.json()["paths"]) == {"/charts", "/charts/{chart_id}", "/chat"}
 
 
 def test_get_unknown_chart_returns_not_found() -> None:
     client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
 
     response = client.get("/charts/00000000-0000-0000-0000-000000000000")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Chart not found"}
+
+
+def test_post_chat_returns_prompt_and_rag_queries_for_known_chart() -> None:
+    client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
+
+    created = client.post(
+        "/charts",
+        json={
+            "date": "2001-09-02",
+            "time": "11:02:00",
+            "latitude": 4.7110,
+            "longitude": -74.0721,
+            "timezone": "America/Bogota",
+        },
+    )
+    chart_id = created.json()["id"]
+
+    response = client.post(
+        "/chat",
+        json={"chart_id": chart_id, "user_query": "How will my career evolve this year?"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body["prompt_generated"], str)
+    assert body["prompt_generated"] != ""
+    assert isinstance(body["rag_queries_used"], list)
+    assert len(body["rag_queries_used"]) > 0
+    assert all(isinstance(query, str) for query in body["rag_queries_used"])
+
+
+def test_post_chat_with_unknown_chart_id_returns_not_found() -> None:
+    client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
+
+    response = client.post(
+        "/chat",
+        json={"chart_id": str(uuid4()), "user_query": "How will my career evolve this year?"},
+    )
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Chart not found"}
