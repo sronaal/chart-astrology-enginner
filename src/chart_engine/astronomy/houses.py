@@ -29,10 +29,10 @@ class HouseCalculator:
             birth_data.longitude,
             HOUSE_SYSTEM,
         )
-        # pyswisseph keeps index 0 as a sentinel; the 12 cusps are 1..12.
+        # pyswisseph returns 12 cusps directly (indices 0-11).
         houses = [
             HouseCusp(number=index, longitude=longitude % 360)
-            for index, longitude in enumerate(cusps[1:], start=1)
+            for index, longitude in enumerate(cusps, start=1)
         ]
         angles = ChartAngles(
             ascendant=ascmc[0] % 360,
