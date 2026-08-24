@@ -22,13 +22,16 @@ src/chart_engine/domain/enums.py
 src/chart_engine/domain/models.py
 src/chart_engine/services/__init__.py
 src/chart_engine/services/chart_service.py
+src/chart_engine/services/context_builder.py
 src/chart_engine/utils/__init__.py
 src/chart_engine/utils/angles.py
 src/chart_engine/utils/time.py
 tests/test_api.py
 tests/test_aspects.py
 tests/test_chart_engine.py
+tests/test_context_builder.py
 tests/test_ephemeris.py
+tests/test_golden_chart.py
 tests/test_houses.py
 tests/test_models.py
 tests/test_planets.py

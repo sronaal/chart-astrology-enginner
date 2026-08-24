@@ -39,7 +39,7 @@ class PlanetCalculator:
 
         for name, planet_id in PLANETS.items():
 
-            result, flags, message = swe.calc_ut(
+            result, flags = swe.calc_ut(
                 julian_day,
                 planet_id,
             )
