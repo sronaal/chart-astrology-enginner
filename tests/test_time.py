@@ -46,3 +46,19 @@ def test_local_to_utc_uses_the_iana_offset_for_the_input_date(
     expected_utc: datetime,
 ) -> None:
     assert local_to_utc(local_datetime, timezone_name) == expected_utc
+
+
+def test_local_to_utc_raises_for_nonexistent_spring_forward_time() -> None:
+    with pytest.raises(ValueError, match="does not exist"):
+        local_to_utc(datetime(2024, 3, 10, 2, 30, 0), "America/New_York")
+
+
+def test_local_to_utc_raises_for_ambiguous_fall_back_time() -> None:
+    with pytest.raises(ValueError, match="ambiguous"):
+        local_to_utc(datetime(2024, 11, 3, 1, 30, 0), "America/New_York")
+
+
+def test_local_to_utc_normal_conversion_still_returns_expected_utc() -> None:
+    result = local_to_utc(datetime(2024, 7, 1, 12, 0, 0), "America/New_York")
+
+    assert result == datetime(2024, 7, 1, 16, 0, 0, tzinfo=timezone.utc)
