@@ -1,7 +1,7 @@
 import pytest
 
 from chart_engine.astronomy.ephemeris import EphemerisEngine
-from chart_engine.astronomy.houses import HOUSE_SYSTEM, HouseCalculator
+from chart_engine.astronomy.houses import HOUSE_SYSTEM, POLAR_CIRCLE_LATITUDE, HouseCalculator
 from chart_engine.astrology.houses import house_for_longitude
 from chart_engine.domain.models import BirthData, HouseCusp
 
@@ -158,3 +158,32 @@ def test_house_for_longitude_reference_assignment() -> None:
 def test_house_for_longitude_requires_all_cusps() -> None:
     with pytest.raises(ValueError, match="Exactly 12"):
         house_for_longitude(10, [HouseCusp(number=1, longitude=0)])
+
+
+@pytest.mark.parametrize("latitude", [67.0, -67.0, 66.5, -66.5])
+def test_house_calculator_rejects_latitudes_at_or_beyond_polar_circle(
+    bogota_birth_data: BirthData, latitude: float
+) -> None:
+    birth_data = bogota_birth_data.model_copy(update={"latitude": latitude})
+
+    with pytest.raises(ValueError) as exc_info:
+        HouseCalculator(EphemerisEngine()).calculate(birth_data)
+
+    assert "polar circle" in str(exc_info.value)
+    assert f"received latitude {latitude}" in str(exc_info.value)
+    assert POLAR_CIRCLE_LATITUDE == 66.5
+
+
+@pytest.mark.parametrize("latitude", [59.3, 60.0])
+def test_house_calculator_allows_high_but_valid_latitudes(
+    bogota_birth_data: BirthData, latitude: float
+) -> None:
+    birth_data = bogota_birth_data.model_copy(update={"latitude": latitude})
+
+    houses, angles = HouseCalculator(EphemerisEngine()).calculate(birth_data)
+
+    assert len(houses) == 12
+    assert all(0 <= house.longitude < 360 for house in houses)
+    assert 0 <= angles.ascendant < 360
+    assert 0 <= angles.midheaven < 360
+    assert houses[0].longitude == pytest.approx(angles.ascendant)
