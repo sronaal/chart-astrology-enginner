@@ -1,7 +1,6 @@
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.14.2
--e git+ssh://git@github.com/sronaal/chart-astrology-enginner.git@3b365e5a5716208d03cc6a59b5a9be73d8914f71#egg=astrology_chart_engine
 certifi==2026.7.22
 click==8.4.2
 coverage==7.15.4
