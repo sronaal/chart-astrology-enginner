@@ -8,11 +8,12 @@ class BirthData(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    date: Date = Field(alias="data")
+    date: Date
     time: Time
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
     timezone: str
+
 
     @property
     def data(self) -> Date:
@@ -36,6 +37,7 @@ class PlanetPosition(BaseModel):
     retrograde: bool
     zodiac: ZodiacPosition | None = None
     house: int | None = Field(default=None, ge=1, le=12)
+    on_cusp: bool = False
 
 
 class HouseCusp(BaseModel):
@@ -56,10 +58,24 @@ class AnglePosition(BaseModel):
     zodiac: ZodiacPosition
 
 
+class LunarNode(BaseModel):
+    """Lunar node position (North or South)."""
+    longitude: float = Field(ge=0, lt=360)
+    zodiac: ZodiacPosition
+    house: int | None = Field(default=None, ge=1, le=12)
+
+
+class LilithPosition(BaseModel):
+    """Black Moon Lilith position."""
+    longitude: float = Field(ge=0, lt=360)
+    zodiac: ZodiacPosition
+    house: int | None = Field(default=None, ge=1, le=12)
+
+
 class Aspect(BaseModel):
-    planet_a: str
-    planet_b: str
-    name: str
+    point_a: str
+    point_b: str
+    type: str
     angle: float = Field(ge=0, le=180)
     separation: float = Field(ge=0, le=180)
     orb: float = Field(ge=0)
@@ -73,4 +89,6 @@ class NatalChart(BaseModel):
     houses: list[HouseCusp] = Field(default_factory=list)
     ascendant: AnglePosition
     midheaven: AnglePosition
+    lunar_nodes: dict[str, LunarNode] | None = None
+    lilith: LilithPosition | None = None
     aspects: list[Aspect] = Field(default_factory=list)
