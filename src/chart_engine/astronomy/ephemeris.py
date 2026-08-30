@@ -21,7 +21,7 @@ class EphemerisEngine:
     ) -> float:
 
         local_datetime = datetime.combine(
-            birth_data.data,
+            birth_data.date,
             birth_data.time,
         )
 

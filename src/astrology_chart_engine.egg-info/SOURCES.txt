@@ -15,6 +15,7 @@ src/chart_engine/astronomy/__init__.py
 src/chart_engine/astronomy/aspects.py
 src/chart_engine/astronomy/ephemeris.py
 src/chart_engine/astronomy/houses.py
+src/chart_engine/astronomy/lunar_nodes.py
 src/chart_engine/astronomy/planets.py
 src/chart_engine/astronomy/zodiac.py
 src/chart_engine/domain/__init__.py
@@ -31,6 +32,7 @@ tests/test_aspects.py
 tests/test_chart_engine.py
 tests/test_context_builder.py
 tests/test_ephemeris.py
+tests/test_golden_astronomy.py
 tests/test_golden_chart.py
 tests/test_houses.py
 tests/test_models.py

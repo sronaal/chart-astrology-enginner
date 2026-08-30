@@ -39,10 +39,13 @@ class PlanetCalculator:
 
         for name, planet_id in PLANETS.items():
 
-            result, flags = swe.calc_ut(
+            result_tuple = swe.calc_ut(
                 julian_day,
                 planet_id,
             )
+            
+            # Result is a tuple: (position_data, flag, message)
+            result = result_tuple[0]
 
             longitude = result[0]
             latitude = result[1]
