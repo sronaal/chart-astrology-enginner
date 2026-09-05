@@ -4,21 +4,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astrology-chart-engine"
-version = "0.1.0"
-description = "Deterministic natal chart calculation engine"
+version = "0.2.0"
+description = "Deterministic natal chart calculation engine with auth and PostgreSQL"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi",
     "pysweph",
     "pydantic",
     "pydantic-settings",
-    "uvicorn"
+    "uvicorn",
+    # Auth
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "bcrypt<5.0.0",
+    "python-multipart",
+    # Database
+    "asyncpg",
+    # Validation
+    "email-validator",
+    # Rate limiting
+    "slowapi",
 ]
 
 [project.optional-dependencies]
 dev = [
     "httpx",
-    "pytest"
+    "pytest",
+    "pytest-asyncio",
 ]
 
 [tool.pytest.ini_options]
