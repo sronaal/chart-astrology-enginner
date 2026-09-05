@@ -1,21 +1,13 @@
-```
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.py~
-*.pyc
-*.pyo
-*.pyd
 .Python
 env/
 venv/
 .venv/
-.ENV
-.ENV.*
-.venv/
-.venv.*
 .python-version
 .python-eggs
 pip-log.txt
@@ -33,7 +25,6 @@ coverage.xml
 .hypothesis/
 
 # Distribution / packaging
-.Python
 build/
 develop-eggs/
 dist/
@@ -51,6 +42,11 @@ wheels/
 *.egg
 MANIFEST
 
+# Environment secrets
+.env
+.env.*
+!.env.example
+
 # IDEs
 .vscode/
 .idea/
@@ -63,4 +59,3 @@ MANIFEST
 .Trashes
 ehthumbs.db
 Thumbs.db
-```

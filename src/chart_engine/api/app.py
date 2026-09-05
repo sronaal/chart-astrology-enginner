@@ -1,5 +1,7 @@
 """FastAPI application — auth + chart CRUD."""
 
+import hashlib
+import logging
 from collections.abc import Callable
 from datetime import datetime
 from uuid import UUID, uuid4
@@ -32,6 +34,8 @@ from .schemas import (
     ResetPasswordRequest,
     UserResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ── Security ──────────────────────────────────────────────────────────────
@@ -135,7 +139,10 @@ def create_app(
         user = await user_repo.get_user_by_email(req.email)
         if user:
             token = create_reset_token(user.id)
-            print(f"[PASSWORD RESET] Email: {req.email}, Token: {token}")
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            await user_repo.set_reset_token(user.id, token_hash)
+            logger.info("Password reset requested for user_id=%s", user.id)
+            logger.debug("Password reset token (dev only): %s", token)
 
         return MessageResponse(
             message="Si el email está registrado, recibirás un enlace de recuperación."
@@ -152,6 +159,14 @@ def create_app(
 
         user = await user_repo.get_user_by_id(user_id)
         if not user:
+            raise HTTPException(
+                status_code=400, detail="Token inválido o expirado."
+            )
+
+        # Verify token hash exists in DB (prevents token reuse)
+        token_hash = hashlib.sha256(req.token.encode()).hexdigest()
+        stored_user = await user_repo.get_user_by_reset_token(token_hash)
+        if not stored_user:
             raise HTTPException(
                 status_code=400, detail="Token inválido o expirado."
             )

@@ -4,6 +4,13 @@ from uuid import uuid4
 
 from chart_engine.persistence.database import get_pool
 
+# Whitelist of allowed column names for dynamic queries (defense-in-depth)
+_ALLOWED_COLUMNS = frozenset({
+    "age", "profession", "work_type", "job_satisfaction",
+    "gender", "sexual_orientation", "relationship_status", "children",
+    "living_situation", "goals", "interests", "short_term_goal",
+})
+
 
 async def get_profile(user_id: str) -> dict | None:
     """Get a user profile by user_id."""
@@ -27,6 +34,9 @@ async def upsert_profile(user_id: str, data: dict) -> dict:
     """Create or update a user profile. Returns the profile."""
     pool = await get_pool()
 
+    # Filter data to only allowed columns (defense-in-depth against SQL injection)
+    safe_data = {k: v for k, v in data.items() if k in _ALLOWED_COLUMNS}
+
     # Check if profile exists
     existing = await pool.fetchrow(
         "SELECT id FROM user_profiles WHERE user_id = $1",
@@ -38,7 +48,7 @@ async def upsert_profile(user_id: str, data: dict) -> dict:
         set_clauses = []
         values = []
         idx = 1
-        for key, val in data.items():
+        for key, val in safe_data.items():
             if val is not None:
                 idx += 1
                 set_clauses.append(f"{key} = ${idx}")
@@ -73,18 +83,18 @@ async def upsert_profile(user_id: str, data: dict) -> dict:
             """,
             profile_id,
             user_id,
-            data.get("age"),
-            data.get("profession"),
-            data.get("work_type"),
-            data.get("job_satisfaction"),
-            data.get("gender"),
-            data.get("sexual_orientation"),
-            data.get("relationship_status"),
-            data.get("children", 0),
-            data.get("living_situation"),
-            data.get("goals", []),
-            data.get("interests", []),
-            data.get("short_term_goal"),
+            safe_data.get("age"),
+            safe_data.get("profession"),
+            safe_data.get("work_type"),
+            safe_data.get("job_satisfaction"),
+            safe_data.get("gender"),
+            safe_data.get("sexual_orientation"),
+            safe_data.get("relationship_status"),
+            safe_data.get("children", 0),
+            safe_data.get("living_situation"),
+            safe_data.get("goals", []),
+            safe_data.get("interests", []),
+            safe_data.get("short_term_goal"),
         )
 
     return _row_to_dict(row)
