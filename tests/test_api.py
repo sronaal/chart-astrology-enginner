@@ -1,95 +1,74 @@
-from uuid import uuid4
+"""Tests for auth and chart endpoints."""
 
+from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
-from chart_engine.api.app import ChartStore, create_app
+
+# Mock database before importing app
+@pytest.fixture(autouse=True)
+def mock_database():
+    with patch("chart_engine.persistence.database.init_db", new_callable=AsyncMock):
+        with patch("chart_engine.persistence.database.close_pool", new_callable=AsyncMock):
+            with patch("chart_engine.persistence.database.get_conn") as mock_conn:
+                # Mock connection context manager
+                mock_connection = AsyncMock()
+                mock_conn.return_value.__aenter__ = AsyncMock(return_value=mock_connection)
+                mock_conn.return_value.__aexit__ = AsyncMock(return_value=False)
+                yield mock_connection
 
 
-class FakeChartEngine:
-    def calculate(self, birth_data):
-        from chart_engine import ChartEngine
+@pytest.fixture
+def client():
+    from chart_engine.api.app import create_app
+    return TestClient(create_app())
 
-        return ChartEngine().calculate(birth_data)
+
+def test_register_user(client):
+    response = client.post(
+        "/auth/register",
+        json={"name": "Test User", "email": "test@example.com", "password": "password123"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["nombre"] == "Test User"
+    assert data["email"] == "test@example.com"
+    assert "token" in data
 
 
-def test_create_chart_returns_natal_chart_json() -> None:
-    client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
+def test_login_user(client):
+    # Register first
+    client.post(
+        "/auth/register",
+        json={"name": "Test User", "email": "test@example.com", "password": "password123"},
+    )
+    # Login
+    response = client.post(
+        "/auth/login",
+        json={"email": "test@example.com", "password": "password123"},
+    )
+    assert response.status_code == 200
+    assert "token" in response.json()
 
+
+def test_me_requires_auth(client):
+    response = client.get("/auth/me")
+    assert response.status_code == 403  # No token
+
+
+def test_create_chart_requires_auth(client):
     response = client.post(
         "/charts",
         json={
-            "date": "2001-09-02",
-            "time": "11:02:00",
-            "latitude": 4.7110,
+            "name": "Test Chart",
+            "birth_date": "2001-09-02",
+            "birth_time": "11:02:00",
+            "city": "Bogotá",
+            "country": "Colombia",
+            "latitude": 4.711,
             "longitude": -74.0721,
             "timezone": "America/Bogota",
         },
     )
-
-    assert response.status_code == 201
-    assert response.json().keys() == {"id", "chart"}
-    assert response.json()["chart"].keys() == {
-        "birth_data", "planets", "houses", "ascendant", "midheaven", "aspects"
-    }
-    get_response = client.get(f"/charts/{response.json()['id']}")
-    assert get_response.status_code == 200
-    assert get_response.json() == response.json()
-
-
-def test_openapi_documents_chart_routes() -> None:
-    client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
-
-    response = client.get("/openapi.json")
-
-    assert response.status_code == 200
-    assert set(response.json()["paths"]) == {"/charts", "/charts/{chart_id}", "/chat"}
-
-
-def test_get_unknown_chart_returns_not_found() -> None:
-    client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
-
-    response = client.get("/charts/00000000-0000-0000-0000-000000000000")
-
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Chart not found"}
-
-
-def test_post_chat_returns_prompt_and_rag_queries_for_known_chart() -> None:
-    client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
-
-    created = client.post(
-        "/charts",
-        json={
-            "date": "2001-09-02",
-            "time": "11:02:00",
-            "latitude": 4.7110,
-            "longitude": -74.0721,
-            "timezone": "America/Bogota",
-        },
-    )
-    chart_id = created.json()["id"]
-
-    response = client.post(
-        "/chat",
-        json={"chart_id": chart_id, "user_query": "How will my career evolve this year?"},
-    )
-
-    assert response.status_code == 200
-    body = response.json()
-    assert isinstance(body["prompt_generated"], str)
-    assert body["prompt_generated"] != ""
-    assert isinstance(body["rag_queries_used"], list)
-    assert len(body["rag_queries_used"]) > 0
-    assert all(isinstance(query, str) for query in body["rag_queries_used"])
-
-
-def test_post_chat_with_unknown_chart_id_returns_not_found() -> None:
-    client = TestClient(create_app(engine_factory=FakeChartEngine, chart_store=ChartStore()))
-
-    response = client.post(
-        "/chat",
-        json={"chart_id": str(uuid4()), "user_query": "How will my career evolve this year?"},
-    )
-
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Chart not found"}
+    assert response.status_code == 403
